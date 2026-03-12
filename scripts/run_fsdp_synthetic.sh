@@ -4,7 +4,7 @@ source scripts/env.sh
 
 mkdir -p logs
 
-torchrun --nproc_per_node=4 train_day3.py \
+torchrun --nproc_per_node=4 train.py \
   --strategy fsdp \
   --dataset synthetic \
   --seq_len 512 \
