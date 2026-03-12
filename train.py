@@ -104,7 +104,7 @@ def parse_args() -> TrainCfg:
     p.add_argument("--save_every", type=int, default=0)  # 0 disables saving
     p.add_argument("--out_dir", type=str, default="./day3_out")
 
-    a = p.parse_args(args=[])
+    a = p.parse_args()
     return TrainCfg(**vars(a))
 
 
