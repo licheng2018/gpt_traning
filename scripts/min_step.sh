@@ -4,7 +4,7 @@ set -euo pipefail
 source scripts/env.sh
 mkdir -p logs outputs
 
-torchrun --nproc_per_node=4 train_day3.py \
+torchrun --nproc_per_node=4 train.py \
   --strategy ddp \
   --dataset synthetic \
   --seq_len 512 \

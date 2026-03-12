@@ -480,16 +480,26 @@ def train(cfg: TrainCfg):
         for i in range(cfg.grad_accum):
             input_ids, labels = batcher.next_batch()
 
-            with maybe_autocast(cfg):
-                outputs = model(input_ids=input_ids, labels=labels)
-                loss = outputs.loss
-                loss_sum += loss.detach().float().item()
-                loss = loss / cfg.grad_accum
+            # 只有 DDP 且不是最后一个 accumulation step 时，关闭梯度同步
+            use_no_sync = (
+                cfg.strategy == "ddp"
+                and hasattr(model, "no_sync")
+                and i < cfg.grad_accum - 1
+            )
+
+            sync_ctx = model.no_sync() if use_no_sync else nullcontext()
+
+            with sync_ctx:
+                with maybe_autocast(cfg):
+                    outputs = model(input_ids=input_ids, labels=labels)
+                    loss = outputs.loss
+                    loss_sum += loss.detach().float().item()
+                    loss = loss / cfg.grad_accum
             
-            if scaler is not None:
-                scaler.scale(loss).backward()
-            else:
-                loss.backward()
+                if scaler is not None:
+                    scaler.scale(loss).backward()
+                else:
+                    loss.backward()
 
         # Gradient clipping + optimizer step
         if scaler is not None:
