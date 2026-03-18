@@ -294,7 +294,7 @@ def build_model_and_tokenizer(cfg: TrainCfg, device: torch.device):
 
     # check point
     if cfg.checkpoint:
-        build_model_and_tokenizer()
+        model.gradient_checkpointing_enable()
 
     # TODO: move model to device for DDP; for FSDP you may still move first
     # model.to(device)
@@ -574,8 +574,9 @@ def train(cfg: TrainCfg):
 
     # Cleanup
     # TODO: dist.barrier(); dist.destroy_process_group()
-    dist.barrier()
-    dist.destroy_process_group()
+    if dist.is_available() and dist.is_initialized():
+        dist.barrier()
+        dist.destroy_process_group()
 
 
 def main():
